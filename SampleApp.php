@@ -3,12 +3,25 @@
     $xml=null;
     $restclient=null;
     $result=null;
-    $cert_file = "";//Path to cert file 
-    $key_file = "";//Path to private key
+    
+    $cert_file=null;//Path to cert file 
+    $key_file=null;//Path to private key
+    $key_password=null;//Private key passphrase
+    $curl_opts=null;//Array to set additional CURL options or override the default options of the SimpleRestClient
+    $post_data=null;//Array or string to set POST data 
     $user_agent = "PHP Sample Rest Client";
     $url = "https://ws.admin.washington.edu/student/v4/public/course/2009,summer,info,344/a";
-    $restclient = new SimpleRestClient($cert_file, $key_file, $user_agent);
-    $restclient->makeWebRequest($url, TRUE); //FALSE means you are requesting a resource that requires X509 cert authentication and you MUST set the $cert_file & $key_file variables above
+
+    $restclient = new SimpleRestClient($cert_file, $key_file, $key_password, $user_agent, $curl_opts);
+    
+    if (!is_null($post_data))
+    {
+      $restclient->postWebRequest($url, $post_data); 
+    }
+    else
+    {
+      $restclient->getWebRequest($url); 
+    }
 ?>
  <html>
  <head>
@@ -40,13 +53,13 @@
         ?>
     </div>
     <br />
-    <span><b>Raw Output: </b></span>
+    <span><b>Response: </b></span>
     <div id="response">
         <textarea id="response_output" rows="10" cols="150">
             <?php
                 if (!is_null($restclient))
                 {
-                    echo $restclient->getWebResponse();
+                  echo $restclient->getWebResponse();
                 }
             ?>
         </textarea>
@@ -55,7 +68,7 @@
     <span><b>Class Detail: </b></span>
     <div id="content">
         <?php
-            if (!is_null($xml) && $restclient->getStatusCode() == 200)
+            if (!is_null($xml) && $restclient->getStatusCode() == 200 && is_null($post_data))
             {
                 echo 'Title: ' . $xml->head->title . '<br />'; //Get xml data via object drill down created by simplexml
                 $result = $xml->xpath('//div/a/span[@class="curriculum_abbreviation"]'); //Get XML data via Xpath queries
